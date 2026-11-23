@@ -22,7 +22,7 @@ windows-examples\
 ├── llserver_Gemma-4-E4B.cmd              server  Gemma 4 E4B   ← agent default
 ├── llserver_Gemma-4-E2B.cmd              server  Gemma 4 E2B
 ├── llserver_Inkling-2-Mini-IQ1_S.cmd     server  Inkling 2 Mini IQ1_S
-├── llserver_Inkling-2-Mini-UD-IQ2_XXS.cmd  server  Inkling 2 Mini IQ2_XXS
+├── llserver_Inkling-2-Mini-IQ2_XXS.cmd  server  Inkling 2 Mini IQ2_XXS
 ├── llstart_*.cmd                         interactive llama-cli twins of the servers
 ├── llstop.cmd                            stop all llama-server.exe
 ├── llcheck.cmd                           RAM / VRAM report
@@ -61,11 +61,11 @@ exist, print a banner, then open `http://localhost:9931`.
 
 | Script | Model | ctx | Speculative | Notes |
 |---|---|---|---|---|
-| `llserver_Gemma-4-12B.cmd` | 12B uncensored `Q4_K_S` | 32768 | MTP | best quality at short context; 32k is the MTP limit |
-| **`llserver_Gemma-4-E4B.cmd`** | E4B `Q4_K_P` | 131072 | MTP | **agent default** — patched template, thinking budget 256 |
-| `llserver_Gemma-4-E2B.cmd` | E2B `Q8_K_P` | 131072 | MTP | same patch and budget; fastest Gemma, but too small for agent work |
-| `llserver_Inkling-2-Mini-IQ1_S.cmd` | Inkling `IQ1_S` | 131072 | DSpark | 1 slot, KV in VRAM; vision + audio |
-| `llserver_Inkling-2-Mini-UD-IQ2_XXS.cmd` | Inkling `IQ2_XXS` | 131072 | DSpark | KV in **RAM** (`--no-kv-offload`), 2-bit experts |
+| `llserver_Gemma-4-12B.cmd` | 12B uncensored `Q4_K_S` | 32768 | MTP, 3 drafts | best quality at short context; 32k is the MTP limit |
+| **`llserver_Gemma-4-E4B.cmd`** | E4B `Q4_K_P` | 131072 | MTP, 3 drafts | **agent default** — patched template, thinking budget 256 |
+| `llserver_Gemma-4-E2B.cmd` | E2B `Q8_K_P` | 131072 | MTP, 3 drafts | same patch and budget; too small for agent work |
+| `llserver_Inkling-2-Mini-IQ1_S.cmd` | Inkling `IQ1_S` | 100000 | DSpark, 2 drafts | KV in **RAM**, 1 slot; **27 t/s**; vision + audio |
+| `llserver_Inkling-2-Mini-IQ2_XXS.cmd` | Inkling `IQ2_XXS` | 100000 | DSpark, 2 drafts | KV in **RAM** (`--no-kv-offload`, 27 % faster), 2-bit experts, 21 t/s |
 
 ### CLI scripts
 
@@ -78,12 +78,20 @@ no alias and no port — the CLI does not need them.
 | `llstart_Gemma-4-12B.cmd` | 12B uncensored `Q4_K_S` | 32768 | MTP |
 | `llstart_Gemma-4-E4B.cmd` | E4B `Q4_K_P` | 131072 | MTP (patched template, budget 256) |
 | `llstart_Gemma-4-E2B.cmd` | E2B `Q8_K_P` | 131072 | MTP (patched template, budget 256) |
-| `llstart_Inkling-2-Mini-IQ1_S.cmd` | Inkling `IQ1_S` | 131072 | DSpark |
-| `llstart_Inkling-2-Mini-UD-IQ2_XXS.cmd` | Inkling `IQ2_XXS` | 131072 | DSpark |
+| `llstart_Inkling-2-Mini-IQ1_S.cmd` | Inkling `IQ1_S` | 100000 | DSpark |
+| `llstart_Inkling-2-Mini-IQ2_XXS.cmd` | Inkling `IQ2_XXS` | 100000 | DSpark |
 
-All scripts pass `--spec-draft-n-max 2`. Four alternating runs on `IQ2_XXS` at 131072 measured
-**19.2 t/s with 58 % acceptance** against 18.6 t/s and 45.5 % with `n-max 3` — plus a smaller draft
-buffer, which matters on a 10 GB card. Unsloth's guide recommends the same value.
+The draft depth is per family — three alternating runs each, quiet desktop:
+
+| Family | `n-max` | Decode | Acceptance |
+|---|---|---|---|
+| Inkling (DSpark) | 2 | **19.2 t/s** | **58 %** |
+| Inkling (DSpark) | 3 | 18.6 t/s | 45.5 % |
+| Gemma (MTP) | **3** | **190.5 t/s** | 54.5 % |
+| Gemma (MTP) | 2 | 155.3 t/s | 56.5 % |
+
+Gemma gains **23 %** from the third draft, Inkling loses with it — DSpark pays more verification work
+per rejected draft. Unsloth's guide recommends 2 for Inkling, which the measurement confirms.
 
 **131072 context with a Q8_0 KV cache** works since the Unsloth build `b12649` (23 Nov 2026). Before
 that fix, `q4_0`/`q8_0` caches used *more* VRAM than `f16` (banded attention was missing for those
@@ -236,12 +244,15 @@ speculative decoding at all.
 
 | Configuration | Prefill | Decode | VRAM free |
 |---|---|---|---|
-| E4B `Q4_K_P`, 131k, KV in VRAM, MTP | 6 500 t/s | 85–110 t/s | 2 100 MiB |
+| E4B `Q4_K_P`, 131k, KV in VRAM, MTP 3 | 6 500 t/s | 145–195 t/s | 1 850–2 100 MiB |
 | 12B `Q4_K_S`, 131k, **KV in RAM**, MTP | 1 290 t/s | 21 t/s | 587 MiB |
 | E2B `Q8_K_P`, 131k, KV in VRAM, MTP | 8 800 t/s | 86–130 t/s | 4 000 MiB |
-| Inkling `IQ1_S`, 131k, KV in VRAM, DSpark | 110–185 t/s | 19–25 t/s | 2 500 MiB |
+| Inkling `IQ1_S`, 100k, KV in **RAM**, DSpark 2 | 58 t/s | **27,0 t/s** | 633 MiB |
+| Inkling `IQ2_XXS`, 100k, KV in **RAM**, DSpark 2 | 54 t/s | **21,2 t/s** | 448 MiB |
+| Inkling `IQ2_XXS`, 100k, KV in **VRAM**, DSpark 2 | 34 t/s | 16,6 t/s | 478 MiB |
+| Inkling `IQ2_XXS`, 131k, KV in **RAM**, DSpark 2 | **98 t/s** (97 625 tok in 992 s) | 16,8–18,7 t/s | 276–382 MiB |
 
-Reading: a 76k-token agent bootstrap costs **11 s** of prefill on an E4B and **12–15 minutes** on
+Reading: a 76k-token agent bootstrap costs **11 s** of prefill on an E4B and **~13 minutes** on
 Inkling. The 12B cannot hold 131k in VRAM on this card — KV in RAM makes it ~5× slower than the E4B.
 
 ---
