@@ -44,11 +44,11 @@ their own location (`set "BASE=%~dp0"`), so they must live **next to** `llama-se
 |---|---|
 | GPU | NVIDIA RTX 3080, 10 GB VRAM (any Ampere or newer with ≥ 10 GB works) |
 | RAM | 32 GB |
-| Build | **Unsloth `b12588-mix-c0c3de8`** or newer from [unslothai/llama.cpp](https://github.com/unslothai/llama.cpp/releases) |
+| Build | **Unsloth `b12649-mix-c7059d6`** (23 Nov 2026) or newer from [unslothai/llama.cpp](https://github.com/unslothai/llama.cpp/releases) |
 | Disk | ~46 GB for the model files below |
 
-> **Inkling 2 Mini needs the Unsloth build.** Mainline llama.cpp (up to `b12588`) fails with
-> `unknown model architecture: 'inkling2'`. The Gemma scripts run on mainline as well.
+> **Inkling 2 Mini: use the Unsloth build.** Earlier mainline versions fail with
+> `unknown model architecture: 'inkling2'`. On 23 Nov 2026 Unsloth re-released every quant so
 
 ---
 
@@ -64,13 +64,13 @@ exist, print a banner, then open `http://localhost:9931`.
 | `llserver_Gemma-4-12B.cmd` | 12B uncensored `Q4_K_S` | 32768 | MTP | best quality at short context; 32k is the MTP limit |
 | **`llserver_Gemma-4-E4B.cmd`** | E4B `Q4_K_P` | 131072 | MTP | **agent default** — patched template, thinking budget 256 |
 | `llserver_Gemma-4-E2B.cmd` | E2B `Q8_K_P` | 131072 | MTP | same patch and budget; fastest Gemma, but too small for agent work |
-| `llserver_Inkling-2-Mini-IQ1_S.cmd` | Inkling `IQ1_S` | 120064 | DSpark | 1 slot, KV in VRAM; vision + audio |
-| `llserver_Inkling-2-Mini-UD-IQ2_XXS.cmd` | Inkling `IQ2_XXS` | 100000 | DSpark | KV in **RAM** (`--no-kv-offload`), 2-bit experts |
+| `llserver_Inkling-2-Mini-IQ1_S.cmd` | Inkling `IQ1_S` | 131072 | DSpark | 1 slot, KV in VRAM; vision + audio |
+| `llserver_Inkling-2-Mini-UD-IQ2_XXS.cmd` | Inkling `IQ2_XXS` | 131072 | DSpark | KV in **RAM** (`--no-kv-offload`), 2-bit experts |
 
 ### CLI scripts
 
 `llstart_<model>.cmd` are the interactive twins of the servers: same model and flags, but
-`llama-cli.exe` in the foreground with `-lv 2` and a German system prompt (`SYSPROMPT`). They set
+`llama-cli.exe` in the foreground with `-lv 3` and a German system prompt (`SYSPROMPT`). They set
 no alias and no port — the CLI does not need them.
 
 | Script | Model | ctx | Speculative |
@@ -78,8 +78,16 @@ no alias and no port — the CLI does not need them.
 | `llstart_Gemma-4-12B.cmd` | 12B uncensored `Q4_K_S` | 32768 | MTP |
 | `llstart_Gemma-4-E4B.cmd` | E4B `Q4_K_P` | 131072 | MTP (patched template, budget 256) |
 | `llstart_Gemma-4-E2B.cmd` | E2B `Q8_K_P` | 131072 | MTP (patched template, budget 256) |
-| `llstart_Inkling-2-Mini-IQ1_S.cmd` | Inkling `IQ1_S` | 120064 | DSpark |
-| `llstart_Inkling-2-Mini-UD-IQ2_XXS.cmd` | Inkling `IQ2_XXS` | 100000 | DSpark |
+| `llstart_Inkling-2-Mini-IQ1_S.cmd` | Inkling `IQ1_S` | 131072 | DSpark |
+| `llstart_Inkling-2-Mini-UD-IQ2_XXS.cmd` | Inkling `IQ2_XXS` | 131072 | DSpark |
+
+All scripts pass `--spec-draft-n-max 2`. Four alternating runs on `IQ2_XXS` at 131072 measured
+**19.2 t/s with 58 % acceptance** against 18.6 t/s and 45.5 % with `n-max 3` — plus a smaller draft
+buffer, which matters on a 10 GB card. Unsloth's guide recommends the same value.
+
+**131072 context with a Q8_0 KV cache** works since the Unsloth build `b12649` (23 Nov 2026). Before
+that fix, `q4_0`/`q8_0` caches used *more* VRAM than `f16` (banded attention was missing for those
+types). Measured with `IQ2_XXS`, `-ctk/-ctv q8_0`, `--kv-offload`: it loads with 246 MiB left over.
 
 ### Helper scripts
 
@@ -231,7 +239,7 @@ speculative decoding at all.
 | E4B `Q4_K_P`, 131k, KV in VRAM, MTP | 6 500 t/s | 85–110 t/s | 2 100 MiB |
 | 12B `Q4_K_S`, 131k, **KV in RAM**, MTP | 1 290 t/s | 21 t/s | 587 MiB |
 | E2B `Q8_K_P`, 131k, KV in VRAM, MTP | 8 800 t/s | 86–130 t/s | 4 000 MiB |
-| Inkling `IQ1_S`, 120k, KV in VRAM, DSpark | 110–185 t/s | 19–25 t/s | 2 500 MiB |
+| Inkling `IQ1_S`, 131k, KV in VRAM, DSpark | 110–185 t/s | 19–25 t/s | 2 500 MiB |
 
 Reading: a 76k-token agent bootstrap costs **11 s** of prefill on an E4B and **12–15 minutes** on
 Inkling. The 12B cannot hold 131k in VRAM on this card — KV in RAM makes it ~5× slower than the E4B.

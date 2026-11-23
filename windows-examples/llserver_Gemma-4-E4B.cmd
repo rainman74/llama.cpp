@@ -30,7 +30,7 @@ set "BUDGET_TEXT=%THINK_BUDGET% Token"
 if /i "%REASONING%"=="off" set "BUDGET_TEXT=0 Token (reasoning off)"
 set "CHAT_TPL=%BASE%models\chat-template-gemma-4-exb.jinja"
 
-if defined DRAFT set DRAFT_ARGS=--model-draft "%DRAFT%" --spec-type %SPEC_TYPE% --spec-draft-n-max 3 --n-gpu-layers-draft 99
+if defined DRAFT set DRAFT_ARGS=--model-draft "%DRAFT%" --spec-type %SPEC_TYPE% --spec-draft-n-max 2 --n-gpu-layers-draft 99
 if not defined DRAFT set DRAFT_ARGS=--spec-type %SPEC_TYPE%
 
 if not exist "%SLOTS%" mkdir "%SLOTS%"

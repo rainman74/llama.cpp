@@ -8,7 +8,7 @@ set "MODELNAME=Inkling 2 Mini IQ1"
 set "MODEL=%BASE%models\Inkling-2-Mini-UD-IQ1_S.gguf"
 set "MMPROJ=%BASE%models\mmproj-F16.gguf"
 set "DRAFT=%BASE%models\dspark-Inkling-2-Mini-Q8_0.gguf"
-set "CTX=120064"
+set "CTX=131072"
 set "KVTYPE=q8_0"
 set "LOADMODE=none"
 set "THINK_BUDGET=2048"
@@ -26,7 +26,7 @@ set "BUDGET_TEXT=%THINK_BUDGET% Token"
 if /i "%REASONING%"=="off" set "BUDGET_TEXT=0 Token (reasoning off)"
 set "SYSPROMPT=Antworte immer auf Deutsch."
 
-if defined DRAFT set DRAFT_ARGS=--model-draft "%DRAFT%" --spec-type %SPEC_TYPE% --spec-draft-n-max 3 --n-gpu-layers-draft 99
+if defined DRAFT set DRAFT_ARGS=--model-draft "%DRAFT%" --spec-type %SPEC_TYPE% --spec-draft-n-max 2 --n-gpu-layers-draft 99
 if not defined DRAFT set DRAFT_ARGS=--spec-type %SPEC_TYPE%
 
 if not exist "%LLAMA_BIN%" goto :NO_BIN
