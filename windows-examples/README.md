@@ -65,6 +65,8 @@ exist, print a banner, then open `http://localhost:9931`.
 | **`llserver_Gemma-4-E4B.cmd`** | E4B `Q4_K_P` | 131072 | MTP, 3 drafts | **agent default** — patched template, thinking budget 256 |
 | `llserver_Gemma-4-E2B.cmd` | E2B `Q8_K_P` | 131072 | MTP, 3 drafts | same patch and budget; too small for agent work |
 | `llserver_Inkling-2-Mini-IQ1_S.cmd` | Inkling `IQ1_S` | 100000 | DSpark, 2 drafts | KV in **RAM**, 1 slot; **27 t/s**; vision + audio |
+| **`llserver_Inkling-2-Mini-IQ1_S-50k.cmd`** | Inkling `IQ1_S` | 50000 | DSpark, 2 drafts | KV in **VRAM** — **33 t/s** at 48k context (3.6× the 100k script) |
+| **`llserver_Inkling-2-Mini-IQ1_S-75k.cmd`** | Inkling `IQ1_S` | 75000 | DSpark, 2 drafts | KV in **VRAM** — **28 t/s** at 71k context (3.3× the 100k script) |
 | `llserver_Inkling-2-Mini-IQ2_XXS.cmd` | Inkling `IQ2_XXS` | 100000 | DSpark, 2 drafts | KV in **RAM** (`--no-kv-offload`, 27 % faster), 2-bit experts, 21 t/s |
 
 ### CLI scripts
@@ -247,13 +249,16 @@ speculative decoding at all.
 | E4B `Q4_K_P`, 131k, KV in VRAM, MTP 3 | 6 500 t/s | 145–195 t/s | 1 850–2 100 MiB |
 | 12B `Q4_K_S`, 131k, **KV in RAM**, MTP | 1 290 t/s | 21 t/s | 587 MiB |
 | E2B `Q8_K_P`, 131k, KV in VRAM, MTP | 8 800 t/s | 86–130 t/s | 4 000 MiB |
+| **Inkling `IQ1_S`, 75k, KV in VRAM**, DSpark 2, ub 256 | **318 t/s** (70 825 tok in 222 s) | **27,95 t/s** | 473 MiB |
+| **Inkling `IQ1_S`, 50k, KV in VRAM**, DSpark 2, ub 256 | **323 t/s** (48 010 tok in 148 s) | **33,1 t/s** | 531 MiB |
 | Inkling `IQ1_S`, 100k, KV in **RAM**, DSpark 2, ub 256 | **226 t/s** | **27,0 t/s** | 633–731 MiB |
 | Inkling `IQ2_XXS`, 100k, KV in **RAM**, DSpark 2, ub 256 | **239 t/s** | **21,2 t/s** | 426 MiB |
 | Inkling `IQ2_XXS`, 100k, KV in **VRAM**, DSpark 2 | 34 t/s | 16,6 t/s | 478 MiB |
 | Inkling `IQ2_XXS`, 131k, KV in **RAM**, DSpark 2 | **98 t/s** (97 625 tok in 992 s) | 16,8–18,7 t/s | 276–382 MiB |
 
 Reading: a 76k-token agent bootstrap costs **11 s** of prefill on an E4B and — with `-ub 256` — a few
-minutes on Inkling (measured 226–239 t/s on a realistic prompt; repetitive filler flashes 98 t/s and is'not representative). The 12B cannot hold 131k in VRAM on this card — KV in RAM makes it ~5× slower than the E4B.
+minutes on Inkling (measured 226–239 t/s on a realistic prompt; repetitive filler flashes 98 t/s and is **not** representative). The 12B cannot hold 131k in VRAM on this card — KV in RAM makes it
+~5× slower than the E4B.
 
 ---
 
