@@ -247,13 +247,13 @@ speculative decoding at all.
 | E4B `Q4_K_P`, 131k, KV in VRAM, MTP 3 | 6 500 t/s | 145–195 t/s | 1 850–2 100 MiB |
 | 12B `Q4_K_S`, 131k, **KV in RAM**, MTP | 1 290 t/s | 21 t/s | 587 MiB |
 | E2B `Q8_K_P`, 131k, KV in VRAM, MTP | 8 800 t/s | 86–130 t/s | 4 000 MiB |
-| Inkling `IQ1_S`, 100k, KV in **RAM**, DSpark 2 | 58 t/s | **27,0 t/s** | 633 MiB |
-| Inkling `IQ2_XXS`, 100k, KV in **RAM**, DSpark 2 | 54 t/s | **21,2 t/s** | 448 MiB |
+| Inkling `IQ1_S`, 100k, KV in **RAM**, DSpark 2, ub 256 | **226 t/s** | **27,0 t/s** | 633–731 MiB |
+| Inkling `IQ2_XXS`, 100k, KV in **RAM**, DSpark 2, ub 256 | **239 t/s** | **21,2 t/s** | 426 MiB |
 | Inkling `IQ2_XXS`, 100k, KV in **VRAM**, DSpark 2 | 34 t/s | 16,6 t/s | 478 MiB |
 | Inkling `IQ2_XXS`, 131k, KV in **RAM**, DSpark 2 | **98 t/s** (97 625 tok in 992 s) | 16,8–18,7 t/s | 276–382 MiB |
 
-Reading: a 76k-token agent bootstrap costs **11 s** of prefill on an E4B and **~13 minutes** on
-Inkling. The 12B cannot hold 131k in VRAM on this card — KV in RAM makes it ~5× slower than the E4B.
+Reading: a 76k-token agent bootstrap costs **11 s** of prefill on an E4B and — with `-ub 256` — a few
+minutes on Inkling (measured 226–239 t/s on a realistic prompt; repetitive filler flashes 98 t/s and is'not representative). The 12B cannot hold 131k in VRAM on this card — KV in RAM makes it ~5× slower than the E4B.
 
 ---
 
