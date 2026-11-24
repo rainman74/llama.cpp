@@ -67,6 +67,7 @@ exist, print a banner, then open `http://localhost:9931`.
 | `llserver_Inkling-2-Mini-IQ1_S.cmd` | Inkling `IQ1_S` | 100000 | DSpark, 2 drafts | KV in **RAM**, 1 slot; **27 t/s**; vision + audio |
 | **`llserver_Inkling-2-Mini-IQ1_S-50k.cmd`** | Inkling `IQ1_S` | 50000 | DSpark, 2 drafts | KV in **VRAM** — **33 t/s** at 48k context (3.6× the 100k script) |
 | **`llserver_Inkling-2-Mini-IQ1_S-75k.cmd`** | Inkling `IQ1_S` | 75000 | DSpark, 2 drafts | KV in **VRAM** — **28 t/s** at 71k context (3.3× the 100k script) |
+| `llserver_Inkling-2-Mini-IQ1_S-100k.cmd` | Inkling `IQ1_S` | 96000 | DSpark, 2 drafts | KV in **VRAM**, `q5_1` — **20,9 t/s** at 96k context; 54 % slower prefill than `q8_0` |
 | `llserver_Inkling-2-Mini-IQ2_XXS.cmd` | Inkling `IQ2_XXS` | 100000 | DSpark, 2 drafts | KV in **RAM** (`--no-kv-offload`, 27 % faster), 2-bit experts, 21 t/s |
 
 ### CLI scripts
@@ -250,6 +251,8 @@ speculative decoding at all.
 | 12B `Q4_K_S`, 131k, **KV in RAM**, MTP | 1 290 t/s | 21 t/s | 587 MiB |
 | E2B `Q8_K_P`, 131k, KV in VRAM, MTP | 8 800 t/s | 86–130 t/s | 4 000 MiB |
 | **Inkling `IQ1_S`, 75k, KV in VRAM**, DSpark 2, ub 256 | **318 t/s** (70 825 tok in 222 s) | **27,95 t/s** | 473 MiB |
+| **Inkling `IQ1_S`, 96k, KV in VRAM, `q5_1`**, DSpark 2, ub 256 | **159 t/s** (96 072 tok in 603 s) | **20,90 t/s** | 164 MiB |
+| Inkling `IQ1_S`, 75k, KV in VRAM, **`q5_1`** | 146 t/s | 24,66 t/s | 781 MiB |
 | **Inkling `IQ1_S`, 50k, KV in VRAM**, DSpark 2, ub 256 | **323 t/s** (48 010 tok in 148 s) | **33,1 t/s** | 531 MiB |
 | Inkling `IQ1_S`, 100k, KV in **RAM**, DSpark 2, ub 256 | **226 t/s** | **27,0 t/s** | 633–731 MiB |
 | Inkling `IQ2_XXS`, 100k, KV in **RAM**, DSpark 2, ub 256 | **239 t/s** | **21,2 t/s** | 426 MiB |
